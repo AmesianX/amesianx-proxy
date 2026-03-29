@@ -207,38 +207,91 @@ python -m amesianx
 python -m amesianx --gen-cert
 ```
 
-### AMF CLI Decoder (Single-file version only)
+---
 
-The single-file version (`amesianx_proxy.py`) includes a standalone AMF analysis tool:
+## AMF Plugin — Detailed Guide
+
+### How AMF Responses Are Handled
+
+The AMF plugin converts AMF binary (Adobe Flex / BlazeDS) to JSON for requests, and decodes AMF responses for viewing in Burp.
+
+> **WARNING:** The AMF plugin provides **read-only** response handling. Responses decoded to JSON in Burp are for **viewing purposes only** — editing the response JSON in Burp will have no effect. The original AMF binary is always restored as-is when sent back to the browser. This is because AMF response structures (BlazeDS Externalizable objects, nested references, etc.) are too complex for reliable round-trip re-encoding. Request editing works fully.
+
+### Large Response Handling
+
+When an AMF response exceeds **512KB** after JSON conversion, the proxy does **not** send the full JSON to Burp (which would cause lag or crashes). Instead:
+
+1. The full JSON and original AMF binary are **saved to files** under `/tmp/amf_responses/`
+2. Burp receives a **summary JSON** containing:
+   - Record count and column names
+   - Sample data (first 3 rows)
+   - File paths to the full data
+   - **CLI commands** you can run to analyze the data
+
+**Example summary shown in Burp:**
+```json
+{
+  "__amf_summary": ">>> THIS IS A SUMMARY - NOT ACTUAL DATA. Full data saved to file below. <<<",
+  "target": "/1/onResult",
+  "class": "flex.messaging.messages.AcknowledgeMessage",
+  "record_path": "body.value",
+  "record_count": 15420,
+  "columns": ["id", "name", "status", "created_at"],
+  "sample_data": [
+    {"id": "1001", "name": "item_a", "status": "active"},
+    {"id": "1002", "name": "item_b", "status": "inactive"}
+  ],
+  "full_data_file": "/tmp/amf_responses/resp_20260329_143022.json",
+  "usage": [
+    "python amesianx_proxy.py --amf-decode /tmp/amf_responses/resp_20260329_143022.json --list",
+    "python amesianx_proxy.py --amf-decode /tmp/amf_responses/resp_20260329_143022.json --list --limit 100",
+    "python amesianx_proxy.py --amf-decode /tmp/amf_responses/resp_20260329_143022.json --list --search keyword",
+    "python amesianx_proxy.py --amf-decode /tmp/amf_responses/resp_20260329_143022.json --list --deep",
+    "python amesianx_proxy.py --amf-decode /tmp/amf_responses/resp_20260329_143022.json --json"
+  ]
+}
+```
+
+Copy the commands from the `usage` field and run them directly in your terminal to analyze the data.
+
+### AMF CLI Decoder
+
+The single-file version (`amesianx_proxy.py`) includes a standalone AMF analysis tool for parsing saved response files:
 
 ```bash
-# Decode AMF file and show structure
+# Show structure overview
 python amesianx_proxy.py --amf-decode response.json
 
-# Show data records as a table
+# Display data records as formatted table
 python amesianx_proxy.py --amf-decode response.json --list
 
-# Limit table rows
-python amesianx_proxy.py --amf-decode response.json --list --limit 20
+# Limit output to N rows
+python amesianx_proxy.py --amf-decode response.json --list --limit 100
 
-# Search/filter rows
+# Search for specific data across all columns (case-insensitive)
 python amesianx_proxy.py --amf-decode response.json --list --search "admin"
 
-# Deep parse raw binary fields
-python amesianx_proxy.py --amf-decode response.json --deep
+# Deep parse — for BlazeDS Externalizable objects that fail normal decoding
+python amesianx_proxy.py --amf-decode response.json --list --deep
 
-# Full JSON dump
+# Full JSON dump — pipe to jq or save for further processing
 python amesianx_proxy.py --amf-decode response.json --json-dump
 ```
 
 | Option | Description |
 |--------|-------------|
 | `--amf-decode FILE` | Decode an AMF response file (JSON or hex dump) |
-| `--list` | Display data records as formatted table |
+| `--list` | Display data records as a formatted ASCII table |
 | `--limit N` | Max rows to display (default: 50) |
-| `--search TEXT` | Filter rows containing text (case-insensitive) |
-| `--deep` | Deep parse `__raw_b64` fields (BlazeDS tail-scanning) |
-| `--json-dump` | Output full decoded JSON envelope |
+| `--search TEXT` | Filter rows containing text (case-insensitive, searches all columns) |
+| `--deep` | Reverse-scan parse for `__raw_b64` fields — attempts to decode BlazeDS Externalizable objects by scanning from the tail of the binary data, useful when normal forward parsing fails |
+| `--json-dump` | Output the full decoded JSON envelope |
+
+#### What is `--deep`?
+
+Some AMF responses contain BlazeDS Externalizable objects with custom serialization formats. The standard AMF decoder cannot parse these, so they are stored as `__raw_b64` (base64-encoded raw bytes) in the JSON output.
+
+The `--deep` option attempts to recover this data using **reverse (tail) scanning** — it looks for known patterns (timestamps, string markers) from the end of the binary data and works backwards to reconstruct the original fields. This won't work for all cases, but it can extract data from many common BlazeDS message types.
 
 ---
 
@@ -584,38 +637,91 @@ python -m amesianx
 python -m amesianx --gen-cert
 ```
 
-### AMF CLI 디코더 (단일 파일 버전 전용)
+---
 
-단일 파일 버전(`amesianx_proxy.py`)에는 독립형 AMF 분석 도구가 포함되어 있습니다:
+## AMF 플러그인 — 상세 가이드
+
+### AMF 응답 처리 방식
+
+AMF 플러그인은 AMF 바이너리(Adobe Flex / BlazeDS)를 요청 시 JSON으로 변환하고, 응답도 Burp에서 볼 수 있도록 디코딩합니다.
+
+> **주의:** AMF 플러그인의 응답 처리는 **읽기 전용**입니다. Burp에서 응답 JSON을 편집해도 **반영되지 않습니다** — 브라우��에는 항상 원본 AMF 바이너리가 그대로 전달됩니다. AMF 응답 구조(BlazeDS Externalizable 객체, 중첩 참조 등)는 ��정적인 양방향 재인코딩이 어렵기 때문입니다. 요청 편집은 완전히 지원됩니다.
+
+### 대용량 응답 처리
+
+AMF 응답이 JSON 변환 후 **512KB**를 초과하면, 전체 JSON을 Burp에 보내지 않습니다 (렉이나 크래시 방지). 대신:
+
+1. 전체 JSON과 원본 AMF 바이너리가 `/tmp/amf_responses/`에 **파일로 저장**됩니다
+2. Burp에는 **요약 JSON**이 표시됩니다:
+   - 레코드 수와 컬럼명
+   - 샘플 데이터 (처음 3개 행)
+   - 전체 데이터 파일 경로
+   - **바로 실행할 수 있는 CLI 명령어**
+
+**Burp에 표시되는 요약 예시:**
+```json
+{
+  "__amf_summary": ">>> THIS IS A SUMMARY - NOT ACTUAL DATA. Full data saved to file below. <<<",
+  "target": "/1/onResult",
+  "class": "flex.messaging.messages.AcknowledgeMessage",
+  "record_path": "body.value",
+  "record_count": 15420,
+  "columns": ["id", "name", "status", "created_at"],
+  "sample_data": [
+    {"id": "1001", "name": "item_a", "status": "active"},
+    {"id": "1002", "name": "item_b", "status": "inactive"}
+  ],
+  "full_data_file": "/tmp/amf_responses/resp_20260329_143022.json",
+  "usage": [
+    "python amesianx_proxy.py --amf-decode /tmp/amf_responses/resp_20260329_143022.json --list",
+    "python amesianx_proxy.py --amf-decode /tmp/amf_responses/resp_20260329_143022.json --list --limit 100",
+    "python amesianx_proxy.py --amf-decode /tmp/amf_responses/resp_20260329_143022.json --list --search keyword",
+    "python amesianx_proxy.py --amf-decode /tmp/amf_responses/resp_20260329_143022.json --list --deep",
+    "python amesianx_proxy.py --amf-decode /tmp/amf_responses/resp_20260329_143022.json --json"
+  ]
+}
+```
+
+`usage` 필드의 명령어를 복사하여 터미널에서 바로 실행하면 전체 데이터를 분석할 수 있습니다.
+
+### AMF CLI 디코더
+
+단일 파일 버전(`amesianx_proxy.py`)에는 저장된 응답 파일을 분석하는 독립형 AMF 분석 도구가 포함되어 있습니다:
 
 ```bash
-# AMF 파일 디코드 및 구조 표시
+# 구조 개요 표시
 python amesianx_proxy.py --amf-decode response.json
 
-# 데이터 레코드를 테이블로 표시
+# 데이터 레코드를 포맷된 테이블로 표시
 python amesianx_proxy.py --amf-decode response.json --list
 
-# 테이블 행 수 제한
-python amesianx_proxy.py --amf-decode response.json --list --limit 20
+# 출력 행 수 제한
+python amesianx_proxy.py --amf-decode response.json --list --limit 100
 
-# 행 검색/필터링
+# 모든 컬럼에서 특정 데이터 검색 (대소문자 무시)
 python amesianx_proxy.py --amf-decode response.json --list --search "admin"
 
-# raw 바이너리 필드 심층 파싱
-python amesianx_proxy.py --amf-decode response.json --deep
+# 심층 파싱 — 일반 디코딩이 실패하는 BlazeDS Externalizable 객체 처리
+python amesianx_proxy.py --amf-decode response.json --list --deep
 
-# 전체 JSON 덤프
+# 전체 JSON 덤프 — jq로 파이프하거나 별도 저장용
 python amesianx_proxy.py --amf-decode response.json --json-dump
 ```
 
 | 옵션 | 설명 |
 |------|------|
 | `--amf-decode FILE` | AMF 응답 파일 디코드 (JSON 또는 hex 덤프) |
-| `--list` | 데이터 레코드를 포맷된 테이블로 표시 |
+| `--list` | 데이터 레코드를 포맷된 ASCII 테이블로 표시 |
 | `--limit N` | 최대 표시 행 수 (기본: 50) |
-| `--search TEXT` | 텍스트를 포함하는 행 필터링 (대소문자 무시) |
-| `--deep` | `__raw_b64` 필드 심층 파싱 (BlazeDS tail-scanning) |
+| `--search TEXT` | 텍스트를 포함하는 행 필터링 (대소문자 무시, 모든 컬럼 검색) |
+| `--deep` | `__raw_b64` 필드를 역순 스캔 파싱 — BlazeDS Externalizable 객체의 바이너리 데이터를 꼬리(tail)부터 역방향으로 스캔하여 일반 정방향 파싱이 실패한 데이터를 복구 시도 |
 | `--json-dump` | 전체 디코딩된 JSON envelope 출력 |
+
+#### `--deep` 옵션이란?
+
+일부 AMF 응답에는 커스텀 직렬화 형식을 사용하는 BlazeDS Externalizable 객체가 포함되어 있습니다. 표준 AMF 디코더로는 이를 파싱할 수 없어 JSON 출력에 `__raw_b64` (base64 인코딩된 원본 바이트)로 저장됩니다.
+
+`--deep` 옵션은 **역방향(tail) 스캔**으로 이 데이터를 복구합니다 — 바이너리 데이터의 끝에서부터 알려진 패턴(타임스탬프, 문자열 마커 등)을 찾아 역방향으로 ��래 필드를 재구성합니다. 모든 경우에 동작하지는 않지만, 많은 일반적인 BlazeDS 메시지 타입에서 데이터��� 추출할 수 있습니다.
 
 ---
 
