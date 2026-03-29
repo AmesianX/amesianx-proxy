@@ -12,7 +12,9 @@
 - **Plugin-based architecture** — Automatically detects and transforms protocol-specific payloads
 - **Bidirectional transformation** — Binary → readable on the way in, readable → binary on the way out
 - **Dual TLS/HTTP support** — Single outbound port handles both encrypted and plain connections
-- **Two editions** — Single-file (`amesianx_proxy.py`) and modular package (`amesianx/`)
+- **Two editions**:
+  - `amesianx_proxy.py` — Single-file version, built for red team engagements. Zero dependencies, no installation needed — just drop it in and run. Includes a built-in AMF CLI decoder for offline analysis.
+  - `amesianx/` — Modular package version for general use with a clean plugin architecture.
 
 ### Included Plugins
 
@@ -444,7 +446,9 @@ MIT License
 - **플러그인 기반 아키텍처** — 프로토콜별 페이로드를 자동 감지하고 변환
 - **양방향 변환** — 들어올 때 바이너리 → 읽기 가능, 나갈 때 읽기 가능 → 바이너리
 - **TLS/HTTP 듀얼 지원** — 단일 아웃바운드 포트에서 암호화/평문 연결 모두 처리
-- **두 가지 에디션** — 단일 파일(`amesianx_proxy.py`)과 모듈형 패키지(`amesianx/`)
+- **두 가지 에디션**:
+  - `amesianx_proxy.py` — 레드팀 전용 단일 파일 버전. 외부 의존성 없이 파일 하나만 가져다 바로 실행 가능. AMF CLI 디코더 내장.
+  - `amesianx/` — 범용 모듈형 패키지 버전. 깔끔한 플러그인 아키텍처 제공.
 
 ### 포함된 플러그인
 
