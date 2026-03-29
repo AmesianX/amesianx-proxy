@@ -7,6 +7,8 @@
 
 **Amesianx Proxy** is a general-purpose intercepting proxy designed for security testing. It sits between your traffic capture tool (e.g., Fiddler) and your editing proxy (e.g., Burp Suite), automatically transforming binary/encoded protocols into human-readable formats for easy inspection and modification.
 
+While this documentation uses Burp Suite as an example, **any proxy that supports upstream proxy configuration** can be used — Burp Suite, OWASP ZAP, Caido, mitmproxy, etc.
+
 ### Key Features
 
 - **Plugin-based architecture** — Automatically detects and transforms protocol-specific payloads
@@ -481,6 +483,8 @@ MIT License
 ## 개요
 
 **Amesianx Proxy**는 보안 테스트를 위한 범용 인터셉팅 프록시입니다. 트래픽 캡처 도구(예: Fiddler)와 편집용 프록시(예: Burp Suite) 사이에 위치하여, 바이너리/인코딩된 프로토콜을 자동으로 사람이 읽을 수 있는 형식으로 변환합니다.
+
+이 문서에서는 Burp Suite를 예시로 사용하지만, **업스트림 프록시를 지원하는 모든 프록시**에서 사용 가능합니다 — Burp Suite, OWASP ZAP, Caido, mitmproxy 등.
 
 ### 주요 기능
 
