@@ -197,6 +197,38 @@ python amesianx_proxy.py
    - **Burp**: Transformed traffic (XML/JSON — human-readable)
 4. Edit the request in Burp → Forward → the proxy restores the original binary format automatically
 
+### Tips for Burp Usage
+
+#### Repeater — Works out of the box
+
+Once the above setup is complete, **Burp Repeater works immediately with no additional configuration**. You can send requests from Proxy history to Repeater, edit them, and hit Send — the proxy chain handles everything automatically.
+
+#### Intruder — Requires full URL in request line
+
+When using **Burp Intruder**, you must include the full URL (scheme + host) in the request line. Intruder does not go through the proxy listener the same way, so the request must be self-contained:
+
+```
+# Will NOT work in Intruder:
+POST /api/service HTTP/1.1
+
+# MUST use full URL:
+POST http://target.example.com/api/service HTTP/1.1
+```
+
+#### Switching Target Servers via Host Header
+
+Proxy-OUT routes requests based on the `Host` header. This means you can **redirect traffic to a different server** simply by changing the `Host` header value — without modifying the request URL.
+
+For example, if you are testing against a development server but want to send a specific request to the production server:
+
+```
+POST /api/service HTTP/1.1
+Host: production.example.com    ← change this to redirect
+Content-Type: application/x-amf
+```
+
+> This is useful during engagements where you need to verify a finding against the production environment while primarily testing on a development server.
+
 ---
 
 ## Usage
@@ -686,6 +718,38 @@ python amesianx_proxy.py
    - **Fiddler**: 원본 트래픽 (바이너리 형식)
    - **Burp**: 변환된 트래픽 (XML/JSON — 사람이 읽을 수 있는 형식)
 4. Burp에서 요청 편집 → Forward → 프록시가 자동으로 원본 바이너리 형식으로 복원
+
+### Burp 사용 팁
+
+#### Repeater — 추가 설정 없이 바로 사용 가능
+
+위 설정을 모두 마치면 **Burp Repeater는 아무 설정도 건드리지 않고 바로 사용할 수 있습니다**. Proxy history에서 요청을 Repeater로 보내고, 편집한 뒤 Send하면 프록시 체인이 자동으로 모든 것을 처리합니다.
+
+#### Intruder — 요청 라인에 전체 URL 필요
+
+**Burp Intruder** 사용 시에는 요청 라인에 전체 URL(스킴 + 호스트)을 포함해야 합니다. Intruder는 프록시 리스너를 동일한 방식으로 거치지 않기 때문에, 요청이 자체적으로 목적지를 포함하고 있어야 합니다:
+
+```
+# Intruder에서 작동하지 않음:
+POST /api/service HTTP/1.1
+
+# 전체 URL을 넣어야 함:
+POST http://target.example.com/api/service HTTP/1.1
+```
+
+#### Host 헤더로 대상 서버 전환
+
+Proxy-OUT은 `Host` 헤더를 기반으로 요청을 라우팅합니다. 따라서 요청 URL을 수정하지 않고도 **`Host` 헤더 값만 변경하면 다른 서버로 트래픽을 보낼 수 있습니다**.
+
+예를 들어, 개발 서버에서 모의해킹을 수행하다가 특정 요청을 운영 서버로 보내고 싶을 때:
+
+```
+POST /api/service HTTP/1.1
+Host: production.example.com    ← 이 값만 바꾸면 운영 서버로 전송
+Content-Type: application/x-amf
+```
+
+> 개발 서버에서 주로 테스트하면서 운영 환경에서 특정 취약점을 검증해야 할 때 유용합니다.
 
 ---
 
