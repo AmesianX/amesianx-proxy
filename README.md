@@ -71,22 +71,63 @@
 
 Fiddler acts as the first hop — it captures all browser traffic and forwards it to Proxy-IN.
 
-1. Open **Fiddler** → **Tools** → **Options** → **Gateway**
-2. Select **Manual Proxy**
-3. Set proxy to: `127.0.0.1:8089`
-4. Click **OK**
+#### 1a. HTTPS Decryption
+
+1. Open **Fiddler** → **Tools** → **Options** → **HTTPS**
+2. Check **Decrypt HTTPS traffic**
+3. Check **Ignore server certificate errors (unsafe)**
 
 ```
 ┌─────────────────────────────────────┐
-│ Fiddler Gateway Settings            │
+│ Fiddler HTTPS Settings              │
 │                                     │
-│ (●) Manual Proxy                    │
-│     Address: 127.0.0.1              │
-│     Port:    8089                   │
+│ [✓] Decrypt HTTPS traffic           │
+│ [✓] Ignore server certificate       │
+│     errors (unsafe)                 │
 └─────────────────────────────────────┘
 ```
 
-> This tells Fiddler to forward all traffic to Amesianx Proxy-IN instead of sending it directly to the internet.
+> This allows Fiddler to intercept and forward HTTPS traffic. Without this, encrypted requests will not be visible or forwarded to the proxy.
+
+#### 1b. Listener Port
+
+1. **Tools** → **Options** → **Connections**
+2. Ensure **Fiddler Classic listens on port**: `8888`
+
+```
+┌─────────────────────────────────────┐
+│ Fiddler Connections                 │
+│                                     │
+│ Fiddler listens on port: 8888      │
+└─────────────────────────────────────┘
+```
+
+#### 1c. Gateway (Forward to Proxy-IN)
+
+1. **Tools** → **Options** → **Gateway**
+2. Select **Manual Proxy Configuration**
+3. Enter: `http=127.0.0.1:8089;https=127.0.0.1:8089`
+
+```
+┌─────────────────────────────────────────────────────┐
+│ Fiddler Gateway Settings                            │
+│                                                     │
+│ (●) Manual Proxy Configuration                      │
+│     http=127.0.0.1:8089;https=127.0.0.1:8089       │
+└─────────────────────────────────────────────────────┘
+```
+
+> This tells Fiddler to forward all HTTP and HTTPS traffic to Amesianx Proxy-IN instead of sending it directly to the internet.
+
+#### 1d. Keep Capture Alive (Important)
+
+When running for extended periods, Fiddler may show a **yellow warning bar** at the top (e.g., "The system proxy was changed" or memory warnings). If this happens, **Fiddler stops capturing traffic** and no packets will be forwarded to the proxy chain.
+
+- **Periodically clear the session list**: Select all sessions (`Ctrl+A`) → `Delete`, or use **Rules** → **Automatically Authenticate**
+- **Watch for the yellow bar**: If it appears, click it to re-enable capturing
+- **Reduce memory pressure**: **Tools** → **Options** → **Performance** → uncheck **Stream audio/video** and lower the session limit if needed
+
+> If Fiddler stops capturing, the entire proxy chain goes silent — requests from the browser will not reach Burp.
 
 ### Step 2: Configure Burp Suite
 
@@ -505,22 +546,63 @@ MIT License
 
 Fiddler는 첫 번째 홉입니다 — 모든 브라우저 트래픽을 캡처하여 Proxy-IN으로 전달합니다.
 
-1. **Fiddler** 열기 → **Tools** → **Options** → **Gateway**
-2. **Manual Proxy** 선택
-3. 프록시 설정: `127.0.0.1:8089`
-4. **OK** 클릭
+#### 1a. HTTPS 복호화
+
+1. **Fiddler** 열기 → **Tools** → **Options** → **HTTPS**
+2. **Decrypt HTTPS traffic** 체크
+3. **Ignore server certificate errors (unsafe)** 체크
 
 ```
 ┌─────────────────────────────────────┐
-│ Fiddler Gateway 설정                 │
+│ Fiddler HTTPS 설정                   │
 │                                     │
-│ (●) Manual Proxy                    │
-│     Address: 127.0.0.1              │
-│     Port:    8089                   │
+│ [✓] Decrypt HTTPS traffic           │
+│ [✓] Ignore server certificate       │
+│     errors (unsafe)                 │
 └─────────────────────────────────────┘
 ```
 
-> Fiddler가 트래픽을 인터넷으로 직접 보내지 않고 Amesianx Proxy-IN으로 전달하도록 합니다.
+> HTTPS 트래픽을 Fiddler가 복호화하여 프록시로 전달할 수 있게 합니다. 이 설정이 없으면 암호화된 요청이 보이지 않고 전달되지 않습니다.
+
+#### 1b. 리스너 포트
+
+1. **Tools** → **Options** → **Connections**
+2. **Fiddler Classic listens on port**: `8888` 확인
+
+```
+┌─────────────────────────────────────┐
+│ Fiddler Connections                 │
+│                                     │
+│ Fiddler listens on port: 8888      │
+└─────────────────────────────────────┘
+```
+
+#### 1c. Gateway (Proxy-IN으로 전달)
+
+1. **Tools** → **Options** → **Gateway**
+2. **Manual Proxy Configuration** 선택
+3. 입력: `http=127.0.0.1:8089;https=127.0.0.1:8089`
+
+```
+┌─────────────────────────────────────────────────────┐
+│ Fiddler Gateway 설정                                 │
+│                                                     │
+│ (●) Manual Proxy Configuration                      │
+│     http=127.0.0.1:8089;https=127.0.0.1:8089       │
+└─────────────────────────────────────────────────────┘
+```
+
+> Fiddler가 모든 HTTP/HTTPS 트래픽을 인터넷으로 직접 보내지 않고 Amesianx Proxy-IN으로 전달하도록 합니다.
+
+#### 1d. 캡처 유지 (중요)
+
+장시간 실행 시 Fiddler 상단에 **노란색 경고바**가 표시될 수 있습니다 (예: "The system proxy was changed" 또는 메모리 경고). 이 경고가 뜨면 **Fiddler의 캡처가 중단**되어 패킷이 프록시 체인으로 전달되지 않습니다.
+
+- **세션 목록을 주기적으로 정리**: 전체 선택(`Ctrl+A`) → `Delete`, 또는 **Rules** → **Automatically Authenticate** 활용
+- **노란색 바를 주시**: 나타나면 클릭하여 캡처를 다시 활성화
+- **메모리 부담 줄이기**: **Tools** → **Options** → **Performance** → **Stream audio/video** 체크 해제, 필요 시 세션 제한 수 축소
+
+> Fiddler 캡처가 중단되면 전체 프록시 체인이 멈춥니다 — 브라우저의 요청이 Burp에 도달하지 않게 됩니다.
 
 ### Step 2: Burp Suite 설정
 
