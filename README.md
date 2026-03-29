@@ -174,6 +174,8 @@ python -m amesianx --upstream 8888
 
 #### Plugin Control
 
+By default, **all plugins are enabled**. Use the flags below to selectively disable specific plugins.
+
 | Option | Description |
 |--------|-------------|
 | `--no-nexacro` | Disable NexacroSSV plugin (SSV ↔ XML) |
@@ -604,6 +606,8 @@ python -m amesianx --upstream 8888
 
 #### 플러그인 제어
 
+기본적으로 **모든 플러그인이 활성화**됩니다. 아래 플래그로 특정 플러그인을 선택적으로 비활성화할 수 있습니다.
+
 | 옵션 | 설명 |
 |------|------|
 | `--no-nexacro` | NexacroSSV 플러그인 비활성화 (SSV ↔ XML) |
@@ -645,7 +649,7 @@ python -m amesianx --gen-cert
 
 AMF 플러그인은 AMF 바이너리(Adobe Flex / BlazeDS)를 요청 시 JSON으로 변환하고, 응답도 Burp에서 볼 수 있도록 디코딩합니다.
 
-> **주의:** AMF 플러그인의 응답 처리는 **읽기 전용**입니다. Burp에서 응답 JSON을 편집해도 **반영되지 않습니다** — 브라우��에는 항상 원본 AMF 바이너리가 그대로 전달됩니다. AMF 응답 구조(BlazeDS Externalizable 객체, 중첩 참조 등)는 ��정적인 양방향 재인코딩이 어렵기 때문입니다. 요청 편집은 완전히 지원됩니다.
+> **주의:** AMF 플러그인의 응답 처리는 **읽기 전용**입니다. Burp에서 응답 JSON을 편집해도 **반영되지 않습니다** — 브라우저에는 항상 원본 AMF 바이너리가 그대로 전달됩니다. AMF 응답 구조(BlazeDS Externalizable 객체, 중첩 참조 등)는 안정적인 양방향 재인코딩이 어렵기 때문입니다. 요청 편집은 완전히 지원됩니다.
 
 ### 대용량 응답 처리
 
@@ -721,7 +725,7 @@ python amesianx_proxy.py --amf-decode response.json --json-dump
 
 일부 AMF 응답에는 커스텀 직렬화 형식을 사용하는 BlazeDS Externalizable 객체가 포함되어 있습니다. 표준 AMF 디코더로는 이를 파싱할 수 없어 JSON 출력에 `__raw_b64` (base64 인코딩된 원본 바이트)로 저장됩니다.
 
-`--deep` 옵션은 **역방향(tail) 스캔**으로 이 데이터를 복구합니다 — 바이너리 데이터의 끝에서부터 알려진 패턴(타임스탬프, 문자열 마커 등)을 찾아 역방향으로 ��래 필드를 재구성합니다. 모든 경우에 동작하지는 않지만, 많은 일반적인 BlazeDS 메시지 타입에서 데이터��� 추출할 수 있습니다.
+`--deep` 옵션은 **역방향(tail) 스캔**으로 이 데이터를 복구합니다 — 바이너리 데이터의 끝에서부터 알려진 패턴(타임스탬프, 문자열 마커 등)을 찾아 역방향으로 원래 필드를 재구성합니다. 모든 경우에 동작하지는 않지만, 많은 일반적인 BlazeDS 메시지 타입에서 데이터를 추출할 수 있습니다.
 
 ---
 
