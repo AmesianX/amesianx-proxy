@@ -139,6 +139,19 @@ Burp receives transformed (readable) traffic from Proxy-IN and sends it to Proxy
 
 1. **Proxy** → **Proxy settings** → **Proxy listeners**
 2. Ensure a listener is running on `127.0.0.1:8080`
+3. Select the listener → **Edit** → **Request handling** tab
+4. Check **Support invisible proxying**
+
+```
+┌─────────────────────────────────────┐
+│ Burp Proxy Listener - 127.0.0.1:8080│
+│                                     │
+│ Request handling:                   │
+│ [✓] Support invisible proxying      │
+└─────────────────────────────────────┘
+```
+
+> Invisible proxying allows Burp to determine the destination from the `Host` header, even when requests arrive in non-proxy format (e.g., `GET /path` instead of `GET http://host/path`). This ensures all forwarded requests from Proxy-IN are handled correctly.
 
 #### 2b. Upstream Proxy (Critical)
 
@@ -616,6 +629,19 @@ Burp는 Proxy-IN에서 변환된(읽기 가능한) 트래픽을 받고, 편집 �
 
 1. **Proxy** → **Proxy settings** → **Proxy listeners**
 2. `127.0.0.1:8080`에서 리스너가 실행 중인지 확인
+3. 리스너 선택 → **Edit** → **Request handling** 탭
+4. **Support invisible proxying** 체크
+
+```
+┌─────────────────────────────────────┐
+│ Burp Proxy Listener - 127.0.0.1:8080│
+│                                     │
+│ Request handling:                   │
+│ [✓] Support invisible proxying      │
+└─────────────────────────────────────┘
+```
+
+> Invisible proxying를 활성화하면 Burp가 non-proxy 형식의 요청(`GET http://host/path`가 아닌 `GET /path`)이 들어와도 `Host` 헤더에서 목적지를 파악합니다. Proxy-IN에서 전달되는 모든 요청이 정상 처리되도록 보장합니다.
 
 #### 2b. Upstream Proxy (중요!)
 
